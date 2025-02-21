@@ -23,14 +23,12 @@ WORKDIR /app
 COPY docker/scripts/ /tmp/scripts/
 RUN chmod +x /tmp/scripts/*.sh
 
-# Combined installation layer with cleanup
-RUN /tmp/scripts/install_deps.sh && \
+# In the combined installation layer:
+    RUN /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
-    # Ensure model directory structure
-    mkdir -p /app/models/insightface && \
-    mv models/insightface /app/models/ && \
-    # Continue cleanup...
+    mkdir -p /app/models && \
+    mv models/* /app/models/ && \  # Changed this line
     rm -rf /tmp/scripts/ && \
     find /usr -depth -name '__pycache__' -exec rm -rf {} + && \
     python3 -m pip cache purge
