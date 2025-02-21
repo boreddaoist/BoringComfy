@@ -1,11 +1,16 @@
 FROM ubuntu:22.04
 
- ARG CIVITAI_TOKEN
+# Base system with layer optimization
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    wget git python3 python3-pip \
+    libgl1 libglib2.0-0 tini tmux \
+    ca-certificates google-perftools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Base system
-RUN apt-get update && apt-get install -y \
-    wget git python3 python3-pip python3-venv \
-    libgl1 libglib2.0-0 tini tmux
+# Create directory structure
+RUN mkdir -p /root/config /app /tmp/scripts
 
 # Copy configurations
 COPY docker/config/ /root/config/
@@ -18,18 +23,27 @@ WORKDIR /app
 COPY docker/scripts/ /tmp/scripts/
 RUN chmod +x /tmp/scripts/*.sh
 
-# Run installations
-RUN /tmp/scripts/install_deps.sh
-RUN /tmp/scripts/install_nodes.sh
-RUN /tmp/scripts/install_models.sh
+# Combined installation layer with cleanup
+RUN /tmp/scripts/install_deps.sh && \
+    /tmp/scripts/install_nodes.sh && \
+    /tmp/scripts/install_models.sh && \
+    # Ensure model directory structure
+    mkdir -p /app/models/insightface && \
+    mv models/insightface /app/models/ && \
+    # Continue cleanup...
+    rm -rf /tmp/scripts/ && \
+    find /usr -depth -name '__pycache__' -exec rm -rf {} + && \
+    python3 -m pip cache purge
 
-# Services setup
-RUN pip install jupyterlab ttyd
+# Environment setup
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+# Install services
+RUN python3 -m pip install --no-cache-dir jupyterlab ttyd
+
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
-# Add these under existing RUN instructions
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-RUN apt-get install -y google-perftools
+
 EXPOSE 8188 8888 7681
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
