@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
-+ ARG CIVITAI_TOKEN
-+
+ ARG CIVITAI_TOKEN
+
 # Base system
 RUN apt-get update && apt-get install -y \
     wget git python3 python3-pip python3-venv \
