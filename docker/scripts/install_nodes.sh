@@ -1,5 +1,6 @@
 #!/bin/bash
-
+set -e  # Add error handling
+set -x  # Add debugging
 # Main nodes
 git clone https://github.com/ltdrdata/ComfyUI-Manager.git custom_nodes/ComfyUI-Manager
 git clone https://codeberg.org/Gourieff/comfyui-reactor-node.git custom_nodes/comfyui-reactor-node
@@ -14,4 +15,4 @@ git clone https://github.com/storyicon/comfyui_segment_anything.git custom_nodes
 git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git custom_nodes/comfyui_controlnet_aux
 
 # Install requirements for all nodes
-find custom_nodes/ -name "requirements.txt" -exec pip install -r {} \;
+find custom_nodes/ -name "requirements.txt" -exec pip3 install -r {} \;

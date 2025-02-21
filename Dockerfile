@@ -24,12 +24,10 @@ COPY docker/scripts/ /tmp/scripts/
 RUN chmod +x /tmp/scripts/*.sh
 
 
-# Combined installation layer with cleanup
+# Fix the combined installation layer
 RUN /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
-    mkdir -p /app/models && \
-    mv models/* /app/models/ && \
     rm -rf /tmp/scripts/ && \
     find /usr -depth -name '__pycache__' -exec rm -rf {} + && \
     python3 -m pip cache purge

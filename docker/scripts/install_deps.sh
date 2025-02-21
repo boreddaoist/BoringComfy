@@ -1,6 +1,7 @@
 # Python dependencies
-pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
-pip install -r requirements.txt
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+pip3 install -r requirements.txt
+
 
 # Cleanup
 apt-get clean
