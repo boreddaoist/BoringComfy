@@ -1,13 +1,16 @@
 #!/bin/bash
+set -e
+set -x
 
-# InsightFace - Corrected path
+# InsightFace models (updated to Hugging Face URLs)
 mkdir -p models/insightface/models/buffalo_l
-wget -O models/insightface/models/buffalo_l/1k3d68.onnx \
-    https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l_1k3d68.onnx
-wget -O models/insightface/models/buffalo_l/2d106det.onnx \
-    https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l_2d106det.onnx
+wget --tries=3 --retry-connrefused -O models/insightface/models/buffalo_l/1k3d68.onnx \
+    https://huggingface.co/lithiumice/insightface/resolve/1141cd22e2bff0d4036d10ba4151903605a8902d/models/buffalo_l/1k3d68.onnx
 
-# Add error handling at the end
+wget --tries=3 --retry-connrefused -O models/insightface/models/buffalo_l/2d106det.onnx \
+    https://huggingface.co/lithiumice/insightface/resolve/1141cd22e2bff0d4036d10ba4151903605a8902d/models/buffalo_l/2d106det.onnx
+
+# Verify downloads
 if [ ! -f models/insightface/models/buffalo_l/1k3d68.onnx ]; then
     echo "Error: InsightFace model download failed!"
     exit 1
