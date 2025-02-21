@@ -5,9 +5,8 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     wget git python3 python3-pip \
     libgl1 libglib2.0-0 tini tmux \
-    ca-certificates libtcmalloc-minimal4 \  # Corrected package name
-    build-essential python3-dev \  # Added build tools
-    && \
+    ca-certificates libtcmalloc-minimal4 \
+    build-essential python3-dev && \  # Moved && to proper location
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
