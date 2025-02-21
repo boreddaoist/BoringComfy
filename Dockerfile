@@ -10,7 +10,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
 # Create directory structure
 RUN mkdir -p /root/config /app /tmp/scripts
 
@@ -25,17 +24,19 @@ WORKDIR /app
 COPY docker/scripts/ /tmp/scripts/
 RUN chmod +x /tmp/scripts/*.sh
 
-
-# Fix pip3 command syntax
+# Combined installation layer with cleanup
 RUN /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
     rm -rf /tmp/scripts/ && \
     find /usr -depth -name '__pycache__' -exec rm -rf {} + && \
-    python3 -m pip cache purge  # Remove "3" after pip
+    python3 -m pip cache purge
+
+# Environment setup
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 # Install services
-RUN python3 -m pip install --no-cache-dir jupyterlab ttyd  # Remove "3" after pip
+RUN python3 -m pip install --no-cache-dir jupyterlab ttyd
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
