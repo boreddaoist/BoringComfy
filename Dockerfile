@@ -35,8 +35,16 @@ RUN /tmp/scripts/install_deps.sh && \
 # Environment setup
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-# Install services
-RUN python3 -m pip install --no-cache-dir jupyterlab ttyd
+# Install system dependencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ttyd && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install --no-cache-dir jupyterlab
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
