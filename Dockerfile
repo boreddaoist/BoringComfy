@@ -6,7 +6,7 @@ RUN apt-get update && \
     wget git python3 python3-pip \
     libgl1 libglib2.0-0 tini tmux \
     ca-certificates libtcmalloc-minimal4 \
-    build-essential python3-dev && \  # Moved && to proper location
+    build-essential python3-dev && \  # Removed backslash here
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -25,19 +25,16 @@ COPY docker/scripts/ /tmp/scripts/
 RUN chmod +x /tmp/scripts/*.sh
 
 
-# Fix the combined installation layer
+# Fix pip3 command syntax
 RUN /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
     rm -rf /tmp/scripts/ && \
     find /usr -depth -name '__pycache__' -exec rm -rf {} + && \
-    python3 -m pip3 cache purge
-
-# Environment setup
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+    python3 -m pip cache purge  # Remove "3" after pip
 
 # Install services
-RUN python3 -m pip3 install --no-cache-dir jupyterlab ttyd
+RUN python3 -m pip install --no-cache-dir jupyterlab ttyd  # Remove "3" after pip
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
