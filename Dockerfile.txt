@@ -1,61 +1,36 @@
 FROM ubuntu:22.04
 
-# Install base system
++ ARG CIVITAI_TOKEN
++
+# Base system
 RUN apt-get update && apt-get install -y \
     wget git python3 python3-pip python3-venv \
-    libgl1 libglib2.0-0 tini
+    libgl1 libglib2.0-0 tini tmux
 
-# Clone ComfyUI
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git
-WORKDIR /ComfyUI
+# Copy configurations
+COPY docker/config/ /root/config/
 
-# Install core requirements
-RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
-RUN pip3 install -r requirements.txt
+# Install core
+RUN git clone https://github.com/comfyanonymous/ComfyUI /app
+WORKDIR /app
 
-# ===== CUSTOM NODES =====
-# ComfyUI Manager
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git custom_nodes/ComfyUI-Manager
+# Copy installation scripts
+COPY docker/scripts/ /tmp/scripts/
+RUN chmod +x /tmp/scripts/*.sh
 
-# Reactor (from Codeberg)
-RUN git clone https://codeberg.org/Gourieff/comfyui-reactor-node.git custom_nodes/comfyui-reactor-node
+# Run installations
+RUN /tmp/scripts/install_deps.sh
+RUN /tmp/scripts/install_nodes.sh
+RUN /tmp/scripts/install_models.sh
 
-# InstantID
-RUN git clone https://github.com/cubiq/ComfyUI_InstantID.git custom_nodes/ComfyUI_InstantID
-
-# Inpaint Nodes
-RUN git clone https://github.com/Acly/comfyui-inpaint-nodes.git custom_nodes/comfyui-inpaint-nodes
-
-# ===== MODELS =====
-# Fooocus Inpaint Models
-RUN mkdir -p models/inpaint && \
-    wget -O models/inpaint/inpaint_v26.fooocus.patch https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/inpaint_v26.fooocus.patch && \
-    wget -O models/inpaint/fooocus_inpaint_head.pth https://huggingface.co/lllyasviel/fooocus_inpaint/resolve/main/fooocus_inpaint_head.pth
-
-# InsightFace buffalo_l
-RUN pip install insightface && \
-    mkdir -p /root/.insightface/models/buffalo_l && \
-    wget -O /root/.insightface/models/buffalo_l/1k3d68.onnx https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l_1k3d68.onnx && \
-    wget -O /root/.insightface/models/buffalo_l/2d106det.onnx https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l_2d106det.onnx
-
-# ===== TOOLS =====
-# Jupyter Notebook
-RUN pip3 install jupyterlab && \
-    jupyter lab --generate-config && \
-    echo "c.ServerApp.token = ''" >> /root/.jupyter/jupyter_lab_config.py && \
-    echo "c.ServerApp.password = ''" >> /root/.jupyter/jupyter_lab_config.py
-
-# Terminal (Web-based)
-RUN apt-get install -y ttyd
-
-# ===== FINAL SETUP =====
-# Install all node requirements
-RUN find custom_nodes/ -name "requirements.txt" -exec pip3 install -r {} \;
-
-EXPOSE 8188 8888 7681
-
-# Start script
+# Services setup
+RUN pip install jupyterlab ttyd
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
+# Add these under existing RUN instructions
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+RUN apt-get install -y google-perftools
+EXPOSE 8188 8888 7681
+
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/start.sh"]
