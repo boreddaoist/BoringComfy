@@ -6,7 +6,7 @@ RUN apt-get update && \
     wget git python3 python3-pip \
     libgl1 libglib2.0-0 tini tmux \
     ca-certificates libtcmalloc-minimal4 \
-    build-essential python3-dev && \
+    build-essential python3-dev && \  # <--- NO trailing spaces
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
