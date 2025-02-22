@@ -15,6 +15,7 @@ RUN mkdir -p /root/config /app /tmp/scripts
 
 # Copy configurations
 COPY docker/config/ /root/config/
+RUN chmod 600 /root/config/jupyter_server_config.py
 
 # Install core
 RUN git clone https://github.com/comfyanonymous/ComfyUI /app
@@ -34,6 +35,8 @@ RUN /tmp/scripts/install_deps.sh && \
 
 # Environment setup
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+ENV JUPYTER_TOKEN=""
+ENV JUPYTER_PASSWORD=""
 
 # Install system dependencies
 RUN apt-get update && \
@@ -51,12 +54,6 @@ RUN chmod +x /start.sh
 
 EXPOSE 8188 8888 7681
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# Zombie process fix
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["/start.sh"]
-# Add to your Dockerfile
-ENV JUPYTER_TOKEN="your_secure_token_here"
-ENV JUPYTER_PASSWORD="your_secure_password_here"
-
-# Update jupyter_server_config.py
-RUN echo "c.ServerApp.token = '$JUPYTER_TOKEN'" >> /root/config/jupyter_server_config.py && \
-    echo "c.ServerApp.password = '$JUPYTER_PASSWORD'" >> /root/config/jupyter_server_config.py
