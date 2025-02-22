@@ -53,3 +53,10 @@ EXPOSE 8188 8888 7681
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/start.sh"]
+# Add to your Dockerfile
+ENV JUPYTER_TOKEN="your_secure_token_here"
+ENV JUPYTER_PASSWORD="your_secure_password_here"
+
+# Update jupyter_server_config.py
+RUN echo "c.ServerApp.token = '$JUPYTER_TOKEN'" >> /root/config/jupyter_server_config.py && \
+    echo "c.ServerApp.password = '$JUPYTER_PASSWORD'" >> /root/config/jupyter_server_config.py
