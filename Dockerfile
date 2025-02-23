@@ -5,8 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget git python3 python3-pip \
     libgl1 libglib2.0-0 tini tmux \
     ca-certificates libtcmalloc-minimal4 \
-    build-essential python3-dev supervisor curl \
-    nvidia-cuda-toolkit && \
+    build-essential python3-dev supervisor curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -26,16 +25,22 @@ RUN git config --global --add safe.directory '*' && \
 
 # Copy configurations and set permissions
 COPY docker/config/ /root/config/
-RUN chmod 600 /root/config/jupyter_server_config.py
-
-# Copy installation scripts and supervisor config
 COPY docker/scripts/ /tmp/scripts/
 COPY docker/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN chmod +x /tmp/scripts/*.sh
+RUN chmod 600 /root/config/jupyter_server_config.py && \
+    chmod +x /tmp/scripts/*.sh
 
-# Install dependencies and cleanup
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install --no-cache-dir wheel setuptools && \
+# Setup CUDA environment
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+ENV PYTHONPATH=/app
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+# Install Python packages and dependencies
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir -r /root/config/requirements.txt && \
+    cd /app && \
     /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
@@ -44,14 +49,9 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip cache purge
 
 # Environment setup
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 ENV JUPYTER_TOKEN=""
 ENV JUPYTER_PASSWORD=""
 ENV TINI_SUBREAPER=true
-ENV PYTHONPATH=/app
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
 
 # Install system dependencies and Python packages
 RUN apt-get update && \
@@ -60,18 +60,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip install --no-cache-dir jupyterlab
 
-# Copy and setup start script
+# Copy and setup scripts
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+COPY docker/scripts/healthcheck.sh /usr/local/bin/
+RUN chmod +x /start.sh /usr/local/bin/healthcheck.sh
 
 # Container metadata
 LABEL maintainer="BoredDaoist" \
       description="ComfyUI with Jupyter and Terminal access" \
       version="1.0"
-
-# Copy and setup healthcheck
-COPY docker/scripts/healthcheck.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/healthcheck.sh
 
 # Health check configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
