@@ -31,16 +31,16 @@ cleanup() {
     echo "Cleanup complete"
 }
 
-# Function to verify directories
+# Function to verify directories and permissions
 check_directories() {
-    local dirs=("/app" "/root/config" "/var/log/supervisor")
-    for dir in "${dirs[@]}"; do
+    local dirs=("/app" "/root/config" "/var/log/supervisor" "/app/output" "/app/models")
+    for dir in "${!dirs[@]}"; do
         if [ ! -d "$dir" ]; then
-            echo "ERROR: Required directory $dir not found!"
-            return 1
+            echo "Creating directory $dir..."
+            mkdir -p "$dir"
+            chmod 755 "$dir"
         fi
     done
-    return 0
 }
 
 # Set trap for cleanup
@@ -50,9 +50,9 @@ trap cleanup EXIT INT TERM
 echo "Checking CUDA availability..."
 check_cuda
 
-# Check required directories
-echo "Checking required directories..."
-check_directories || exit 1
+# Check directories
+echo "Verifying directories..."
+check_directories
 
 # Check ports
 echo "Checking service ports..."
@@ -79,7 +79,7 @@ c.ServerApp.terminado_settings = {'shell_command': ['/bin/bash']}
 c.ServerApp.root_dir = '/app'
 EOL
 
-# Create log directory if it doesn't exist
+# Create log directories
 mkdir -p /var/log/supervisor
 
 # Display access information
@@ -90,6 +90,6 @@ echo "Jupyter: http://localhost:8888/?token=${JUPYTER_TOKEN}"
 echo "Terminal: http://localhost:7681"
 echo "========================================"
 
-# Start supervisor with logging
+# Start supervisor
 echo "Starting services..."
 exec "$@"
