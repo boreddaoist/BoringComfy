@@ -1,31 +1,9 @@
 #!/bin/bash
 set -eo pipefail
 
-echo "Starting dependency installation..."
+echo "Starting dependency verification..."
 
 cd /app || exit 1
-
-# Install Python packages
-echo "Installing ComfyUI core dependencies..."
-python3 -m pip install --no-cache-dir \
-    numpy==1.24.3 \
-    opencv-python==4.8.0.76 \
-    pillow==10.0.0 \
-    transformers==4.31.0 \
-    safetensors==0.3.3 \
-    accelerate==0.21.0 \
-    insightface==0.7.3 \
-    onnxruntime-gpu==1.15.1 \
-    xformers==0.0.21 \
-    aiohttp \
-    einops \
-    scipy \
-    tqdm \
-    psutil \
-    requests \
-    pyyaml \
-    hjson \
-    websockets
 
 # Verify CUDA and dependencies
 echo "Verifying CUDA installation..."
@@ -49,4 +27,4 @@ done
 mkdir -p /app/output /app/models /app/custom_nodes
 chmod -R 777 /app/output /app/models /app/custom_nodes
 
-echo "Dependencies installed successfully!"
+echo "Dependencies verified successfully!"

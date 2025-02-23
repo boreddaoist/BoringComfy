@@ -37,15 +37,30 @@ ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
 ENV PYTHONPATH=/app
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-# Install Python packages and dependencies
+# Install PyTorch and verify installation
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir \
     torch==2.1.0+cu121 \
     torchvision==0.16.0+cu121 \
     torchaudio==2.1.0+cu121 \
-    --extra-index-url https://download.pytorch.org/whl/cu121 && \
-    cd /app && \
+    --index-url https://download.pytorch.org/whl/cu121
+
+# Install core dependencies
+COPY docker/config/requirements.txt /root/config/
+RUN cd /app && \
     python3 -m pip install --no-cache-dir -r /root/config/requirements.txt && \
+    python3 -m pip install --no-cache-dir \
+    xformers==0.0.21 \
+    aiohttp \
+    einops \
+    scipy \
+    tqdm \
+    psutil \
+    requests \
+    pyyaml \
+    hjson \
+    websockets && \
+    python3 -c 'import torch; print(f"CUDA Available: {torch.cuda.is_available()}"); print(f"PyTorch Version: {torch.__version__}")' && \
     /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
