@@ -74,6 +74,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh
 
 EXPOSE 8188 8888 7681
+EXPOSE 8189 8889 7682
 
 ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
