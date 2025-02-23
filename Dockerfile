@@ -10,17 +10,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create directory structure and set permissions
+# Create directory structure with proper ownership
 RUN mkdir -p /root/config /app /tmp/scripts /var/log/supervisor /app/output && \
-    chmod 755 /root/config /app /tmp/scripts /var/log/supervisor /app/output
+    chown -R root:root /app && \
+    chmod -R 755 /root/config /app /tmp/scripts /var/log/supervisor /app/output
 
-# Copy configurations
+# Set working directory and clone ComfyUI
+WORKDIR /app
+RUN git config --global --add safe.directory /app && \
+    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI . && \
+    chown -R root:root . && \
+    chmod -R 755 .
+
+# Copy configurations and set permissions
 COPY docker/config/ /root/config/
 RUN chmod 600 /root/config/jupyter_server_config.py
-
-# Install core
-RUN git clone https://github.com/comfyanonymous/ComfyUI /app
-WORKDIR /app
 
 # Copy installation scripts and supervisor config
 COPY docker/scripts/ /tmp/scripts/
@@ -54,6 +58,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip install --no-cache-dir jupyterlab
 
+# Copy and setup start script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
@@ -62,14 +67,13 @@ LABEL maintainer="BoredDaoist" \
       description="ComfyUI with Jupyter and Terminal access" \
       version="1.0"
 
-# Copy healthcheck script
+# Copy and setup healthcheck
 COPY docker/scripts/healthcheck.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/healthcheck.sh
 
-# Health check
+# Health check configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh
-
 
 EXPOSE 8188 8888 7681
 
