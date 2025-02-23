@@ -39,6 +39,11 @@ ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 # Install Python packages and dependencies
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir \
+    torch==2.1.0+cu121 \
+    torchvision==0.16.0+cu121 \
+    torchaudio==2.1.0+cu121 \
+    --index-url https://download.pytorch.org/whl/cu121 && \
     cd /app && \
     /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \

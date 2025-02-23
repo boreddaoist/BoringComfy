@@ -5,20 +5,6 @@ echo "Starting dependency installation..."
 
 cd /app || exit 1
 
-echo "Installing base Python packages..."
-python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
-
-echo "Installing PyTorch with CUDA support..."
-python3 -m pip install --no-cache-dir \
-    torch==2.1.0+cu121 \
-    torchvision==0.16.0+cu121 \
-    torchaudio==2.1.0+cu121 \
-    --index-url https://download.pytorch.org/whl/cu121
-
-# Verify CUDA installation
-echo "Verifying CUDA installation..."
-python3 -c 'import torch; print(f"CUDA Available: {torch.cuda.is_available()}"); print(f"CUDA Version: {torch.version.cuda}"); print(f"PyTorch Version: {torch.__version__}")'
-
 echo "Installing ComfyUI core dependencies..."
 python3 -m pip install --no-cache-dir \
     numpy \
