@@ -27,8 +27,10 @@ COPY docker/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod +x /tmp/scripts/*.sh
 
 # Install dependencies and cleanup
-RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir wheel setuptools && \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
     /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
