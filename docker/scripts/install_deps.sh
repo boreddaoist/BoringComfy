@@ -24,10 +24,20 @@ python3 -m pip install --no-cache-dir \
     safetensors \
     accelerate \
     insightface \
-    onnxruntime-gpu
+    onnxruntime-gpu \
+    xformers \
+    aiohttp \
+    einops \
+    scipy \
+    tqdm \
+    psutil
+
+# Verify CUDA installation
+echo "Verifying CUDA installation..."
+python3 -c 'import torch; print(f"CUDA available: {torch.cuda.is_available()}"); print(f"CUDA version: {torch.version.cuda}"); print(f"Device count: {torch.cuda.device_count()}")'
 
 # Create required directories
-mkdir -p /app/output /app/models
-chmod 777 /app/output /app/models
+mkdir -p /app/output /app/models /app/custom_nodes
+chmod 777 /app/output /app/models /app/custom_nodes
 
 echo "Dependencies installed successfully!"

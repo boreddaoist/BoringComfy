@@ -43,6 +43,17 @@ check_directories() {
     done
 }
 
+# Add after check_directories function
+check_logs() {
+    if [ -f "/var/log/supervisor/comfyui.err" ]; then
+        echo "ComfyUI Error Log:"
+        tail -n 50 /var/log/supervisor/comfyui.err
+    fi
+}
+
+# Add before exec command
+trap check_logs ERR
+
 # Set trap for cleanup
 trap cleanup EXIT INT TERM
 
