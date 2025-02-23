@@ -3,15 +3,14 @@ set -eo pipefail
 
 echo "Starting dependency installation..."
 
-# Check CUDA availability
-check_cuda() {
-    if ! nvidia-smi &> /dev/null; then
-        echo "WARNING: NVIDIA GPU not detected!"
-        return 1
-    fi
-    nvidia-smi --query-gpu=name,driver_version,compute_mode --format=csv,noheader
-    return 0
-}
+# Remove CUDA check during build
+# check_cuda() {
+#     if ! nvidia-smi &> /dev/null; then
+#         echo "WARNING: NVIDIA GPU not detected!"
+#         return 1
+#     fi
+#     return 0
+# }
 
 # Version pinning for better reproducibility
 TORCH_VERSION="2.1.0"
@@ -25,26 +24,16 @@ fi
 
 cd /app
 
-# Check CUDA
-echo "Checking CUDA installation..."
-check_cuda
-
 echo "Installing PyTorch dependencies..."
-if ! pip3 install --no-cache-dir \
+pip3 install --no-cache-dir \
     torch==${TORCH_VERSION}+${CUDA_VERSION} \
     torchvision==${TORCH_VERSION}+${CUDA_VERSION} \
     torchaudio==${TORCH_VERSION}+${CUDA_VERSION} \
-    --extra-index-url https://download.pytorch.org/whl/${CUDA_VERSION}; then
-    echo "ERROR: PyTorch installation failed!"
-    exit 1
-fi
+    --extra-index-url https://download.pytorch.org/whl/${CUDA_VERSION}
 
 # Install base requirements
 echo "Installing base requirements..."
-if ! pip3 install --no-cache-dir numpy opencv-python pillow; then
-    echo "ERROR: Base requirements installation failed!"
-    exit 1
-fi
+pip3 install --no-cache-dir numpy opencv-python pillow
 
 # Install ComfyUI requirements
 echo "Installing ComfyUI requirements..."
@@ -53,15 +42,6 @@ if [ ! -f "requirements.txt" ]; then
     exit 1
 fi
 
-if ! pip3 install --no-cache-dir -r requirements.txt; then
-    echo "ERROR: ComfyUI requirements installation failed!"
-    exit 1
-fi
-
-# Verify torch installation
-echo "Verifying PyTorch installation..."
-if ! python3 -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"; then
-    echo "WARNING: PyTorch CUDA verification failed!"
-fi
+pip3 install --no-cache-dir -r requirements.txt
 
 echo "Dependencies installed successfully!"
