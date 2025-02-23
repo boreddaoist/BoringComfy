@@ -11,9 +11,34 @@ check_cuda() {
     return 0
 }
 
+# Function to check ComfyUI dependencies
+check_comfy_deps() {
+    echo "Checking ComfyUI dependencies..."
+    cd /app || exit 1
+    python3 -c '
+import sys
+import torch
+import numpy
+import PIL
+import einops
+import transformers
+import safetensors
+print("Python:", sys.version)
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA version:", torch.version.cuda)
+print("PyTorch:", torch.__version__)
+print("Dependencies OK")
+' 2>/dev/null || {
+        echo "ERROR: Missing ComfyUI dependencies!"
+        cat /var/log/supervisor/comfyui.err
+        return 1
+    }
+    return 0
+}
+
 # Function to verify service ports
 check_ports() {
-    local ports=(8188 8888 7681)
+    local ports=(8188 8888 7681 8189 8889 7682)
     for port in "${ports[@]}"; do
         if lsof -i ":$port" >/dev/null 2>&1; then
             echo "ERROR: Port $port is already in use!"
@@ -26,6 +51,9 @@ check_ports() {
 # Function for cleanup
 cleanup() {
     echo "Performing cleanup..."
+    if [ ! -z "$TAIL_PID" ]; then
+        kill $TAIL_PID 2>/dev/null || true
+    fi
     supervisorctl stop all
     sleep 2
     echo "Cleanup complete"
@@ -33,26 +61,23 @@ cleanup() {
 
 # Function to verify directories and permissions
 check_directories() {
-    local dirs=("/app" "/root/config" "/var/log/supervisor" "/app/output" "/app/models")
-    for dir in "${!dirs[@]}"; do
+    local dirs=("/app" "/root/config" "/var/log/supervisor" "/app/output" "/app/models" "/app/custom_nodes")
+    for dir in "${dirs[@]}"; do
         if [ ! -d "$dir" ]; then
             echo "Creating directory $dir..."
             mkdir -p "$dir"
-            chmod 755 "$dir"
+            chmod 777 "$dir"
         fi
     done
 }
 
-# Add after check_directories function
-check_logs() {
-    if [ -f "/var/log/supervisor/comfyui.err" ]; then
-        echo "ComfyUI Error Log:"
-        tail -n 50 /var/log/supervisor/comfyui.err
-    fi
+# Function to monitor logs
+monitor_logs() {
+    mkdir -p /var/log/supervisor
+    touch /var/log/supervisor/comfyui.log /var/log/supervisor/comfyui.err
+    tail -F /var/log/supervisor/comfyui.log /var/log/supervisor/comfyui.err &
+    TAIL_PID=$!
 }
-
-# Add before exec command
-trap check_logs ERR
 
 # Set trap for cleanup
 trap cleanup EXIT INT TERM
@@ -90,16 +115,25 @@ c.ServerApp.terminado_settings = {'shell_command': ['/bin/bash']}
 c.ServerApp.root_dir = '/app'
 EOL
 
-# Create log directories
+# Create log directory
 mkdir -p /var/log/supervisor
 
 # Display access information
 echo "========================================"
 echo "Service Access Information:"
-echo "ComfyUI: http://localhost:8188"
-echo "Jupyter: http://localhost:8888/?token=${JUPYTER_TOKEN}"
-echo "Terminal: http://localhost:7681"
+echo "ComfyUI Web: http://localhost:8188"
+echo "ComfyUI API: http://localhost:8189"
+echo "Jupyter Lab: http://localhost:8888/?token=${JUPYTER_TOKEN}"
+echo "Terminal Web: http://localhost:7681"
+echo "Terminal API: http://localhost:7682"
 echo "========================================"
+
+# Check ComfyUI dependencies
+echo "Checking ComfyUI dependencies..."
+check_comfy_deps || exit 1
+
+# Start log monitoring
+monitor_logs
 
 # Start supervisor
 echo "Starting services..."
