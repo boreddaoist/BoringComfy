@@ -20,11 +20,13 @@ RUN chmod 600 /root/config/jupyter_server_config.py
 # Install core
 RUN git clone https://github.com/comfyanonymous/ComfyUI /app
 WORKDIR /app
+COPY docker/config/requirements.txt /app/requirements.txt
 
 # Copy installation scripts and supervisor config
 COPY docker/scripts/ /tmp/scripts/
 COPY docker/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod +x /tmp/scripts/*.sh
+
 
 # Install dependencies and cleanup
 RUN /tmp/scripts/install_deps.sh && \

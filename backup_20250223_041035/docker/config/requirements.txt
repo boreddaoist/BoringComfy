@@ -1,0 +1,20 @@
+# Core dependencies
+torch>=2.1.0
+torchvision>=0.16.0
+numpy>=1.24.3
+opencv-python>=4.8.0
+pillow>=10.0.0
+tqdm>=4.65.0
+scipy>=1.11.2
+aiohttp>=3.8.5
+accelerate>=0.21.0
+
+# Image processing
+transformers>=4.31.0
+safetensors>=0.3.3
+psutil>=5.9.5
+requests>=2.31.0
+
+# Optional but recommended
+insightface>=0.7.3
+onnxruntime-gpu>=1.15.1
