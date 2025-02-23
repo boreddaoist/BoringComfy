@@ -1,8 +1,7 @@
-FROM ubuntu:22.04
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
 
 # Base system with layer optimization
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     wget git python3 python3-pip \
     libgl1 libglib2.0-0 tini tmux \
     ca-certificates libtcmalloc-minimal4 \
@@ -10,15 +9,9 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# CUDA Environment setup
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-
-# Create directory structure
-RUN mkdir -p /root/config /app /tmp/scripts /var/log/supervisor
+# Create directory structure and set permissions
+RUN mkdir -p /root/config /app /tmp/scripts /var/log/supervisor && \
+    chmod 755 /root/config /app /tmp/scripts /var/log/supervisor
 
 # Copy configurations
 COPY docker/config/ /root/config/
@@ -33,7 +26,7 @@ COPY docker/scripts/ /tmp/scripts/
 COPY docker/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN chmod +x /tmp/scripts/*.sh
 
-# Combined installation layer with cleanup
+# Install dependencies and cleanup
 RUN /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
@@ -47,15 +40,12 @@ ENV JUPYTER_TOKEN=""
 ENV JUPYTER_PASSWORD=""
 ENV TINI_SUBREAPER=true
 
-# Install system dependencies
+# Install system dependencies and Python packages
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ttyd && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ttyd && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Python packages
-RUN python3 -m pip install --upgrade pip && \
+    rm -rf /var/lib/apt/lists/* && \
+    python3 -m pip install --upgrade pip && \
     python3 -m pip install --no-cache-dir jupyterlab
 
 COPY start.sh /start.sh
