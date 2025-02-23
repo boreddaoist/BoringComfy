@@ -17,8 +17,10 @@ RUN mkdir -p /root/config /app /tmp/scripts /var/log/supervisor /app/output && \
 
 # Set working directory and clone ComfyUI
 WORKDIR /app
-RUN git config --global --add safe.directory /app && \
-    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI . && \
+RUN git config --global --add safe.directory '*' && \
+    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI /tmp/comfyui && \
+    cp -r /tmp/comfyui/. . && \
+    rm -rf /tmp/comfyui && \
     chown -R root:root . && \
     chmod -R 755 .
 
