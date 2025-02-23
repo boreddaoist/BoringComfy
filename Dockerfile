@@ -43,8 +43,9 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     torch==2.1.0+cu121 \
     torchvision==0.16.0+cu121 \
     torchaudio==2.1.0+cu121 \
-    --index-url https://download.pytorch.org/whl/cu121 && \
+    --extra-index-url https://download.pytorch.org/whl/cu121 && \
     cd /app && \
+    python3 -m pip install --no-cache-dir -r /root/config/requirements.txt && \
     /tmp/scripts/install_deps.sh && \
     /tmp/scripts/install_nodes.sh && \
     /tmp/scripts/install_models.sh && \
